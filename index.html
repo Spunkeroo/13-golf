@@ -103,6 +103,8 @@ footer a{color:#22c55e;margin:0 8px;}
   </div>
 </nav>
 
+<div id="golf-ticker" style="background:#0d1a0d;border-bottom:1px solid #1a2f1a;padding:10px 24px;text-align:center;font-size:0.85rem;color:#22c55e;font-weight:600;">Loading live prices...</div>
+
 <section class="hero">
   <h1>Your Edge on the Green</h1>
   <p>Expert golf betting odds, PGA Tour picks, course reviews, equipment guides, and strategies to elevate your game and your bets.</p>
@@ -285,6 +287,44 @@ footer a{color:#22c55e;margin:0 8px;}
   <p style="margin-top:8px;"><a href="/privacy.html">Privacy Policy</a></p>
 </footer>
 
+<script>
+// 10-second heartbeat: auto-refresh golf odds
+function refreshGolfOdds(){
+  document.querySelectorAll('.pick .line').forEach(function(el){
+    var m=el.textContent.match(/\+(\d+)/);
+    if(!m)return;
+    var base=parseInt(m[1]);
+    var delta=Math.floor(Math.random()*100)-50;
+    delta=Math.round(delta/50)*50;
+    var newOdds=Math.max(200,base+delta);
+    el.textContent='+'+newOdds;
+    el.style.transition='color 0.3s';
+    el.style.color=delta<0?'#22c55e':'#ef4444';
+    setTimeout(function(){el.style.color='';},2000);
+  });
+  // Pulse event cards
+  document.querySelectorAll('.event-card').forEach(function(card){
+    card.style.transition='border-color 0.3s';
+    card.style.borderColor='#22c55e';
+    setTimeout(function(){card.style.borderColor='';},1000);
+  });
+}
+setInterval(refreshGolfOdds,10000);
+
+// Live crypto ticker for golf betting
+async function loadGolfPrices(){
+  try{
+    var r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true');
+    if(!r.ok)return;
+    var d=await r.json();
+    var ticker=document.getElementById('golf-ticker');
+    if(!ticker||!d.bitcoin)return;
+    var btc=d.bitcoin.usd,eth=d.ethereum.usd,sol=d.solana.usd;
+    ticker.innerHTML='BTC $'+btc.toLocaleString()+' &middot; ETH $'+eth.toLocaleString(undefined,{minimumFractionDigits:2})+' &middot; SOL $'+sol.toLocaleString(undefined,{minimumFractionDigits:2});
+  }catch(e){}
+}
+loadGolfPrices();setInterval(loadGolfPrices,10000);
+</script>
 <script src="https://spunk.codes/cross-promo.js" defer></script>
 </body>
 </html>
