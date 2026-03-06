@@ -393,15 +393,15 @@ setInterval(refreshGolfOdds,10000);
 
 // Live crypto ticker for golf betting
 async function loadGolfPrices(){
-  try{
-    var r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true');
-    if(!r.ok)return;
-    var d=await r.json();
-    var ticker=document.getElementById('golf-ticker');
-    if(!ticker||!d.bitcoin)return;
-    var btc=d.bitcoin.usd,eth=d.ethereum.usd,sol=d.solana.usd;
-    ticker.innerHTML='BTC $'+btc.toLocaleString()+' &middot; ETH $'+eth.toLocaleString(undefined,{minimumFractionDigits:2})+' &middot; SOL $'+sol.toLocaleString(undefined,{minimumFractionDigits:2});
-  }catch(e){}
+  let d=null;
+  try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true');if(r.ok){const j=await r.json();if(j&&j.bitcoin)d=j;}}catch(e){}
+  if(!d)try{const r=await fetch('https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana');if(r.ok){const j=await r.json();if(j&&j.data){d={};j.data.forEach(c=>{d[c.id]={usd:parseFloat(c.priceUsd),usd_24h_change:parseFloat(c.changePercent24Hr)};});}}}catch(e){}
+  if(!d)try{const rs=await Promise.all(['btc-bitcoin','eth-ethereum','sol-solana'].map(id=>fetch('https://api.coinpaprika.com/v1/tickers/'+id+'?quotes=USD').then(r=>r.json())));d={bitcoin:{usd:rs[0].quotes.USD.price},ethereum:{usd:rs[1].quotes.USD.price},solana:{usd:rs[2].quotes.USD.price}};}catch(e){}
+  if(!d||!d.bitcoin)return;
+  var ticker=document.getElementById('golf-ticker');
+  if(!ticker)return;
+  var btc=d.bitcoin.usd,eth=d.ethereum.usd,sol=d.solana.usd;
+  ticker.innerHTML='BTC $'+btc.toLocaleString()+' &middot; ETH $'+eth.toLocaleString(undefined,{minimumFractionDigits:2})+' &middot; SOL $'+sol.toLocaleString(undefined,{minimumFractionDigits:2});
 }
 loadGolfPrices();setInterval(loadGolfPrices,10000);
 </script>
